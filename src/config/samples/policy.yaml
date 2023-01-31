@@ -57,6 +57,9 @@ spec:
       openSearchAddr: "https://opensearch-cluster-master.default:9200"
       openSearchUser: "admin"
       openSearchPasswd: "admin"
+      governor:
+        enabled: true
+        orgId: testing1234567
     baselines:
       - kind: "vulnerability"
         baseline: "High"

@@ -128,6 +128,17 @@ spec:
                       elasticSearchUser:
                         description: ElasticSearch username for the client
                         type: string
+                      governor:
+                        description: Indicate whether to config of governor
+                        properties:
+                          enabled:
+                            default: false
+                            description: Indicate whether to send the reports to governor
+                            type: boolean
+                          orgId:
+                            description: Unique identification for workload
+                            type: string
+                        type: object
                       format:
                         default: YAML
                         description: Format of the assessment report data.

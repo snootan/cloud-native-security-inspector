@@ -15,12 +15,14 @@ require (
 	github.com/goharbor/go-client v0.25.0
 	github.com/goharbor/harbor/src v0.0.0-20221115123844-ea27197a8227
 	github.com/gomodule/redigo v2.0.0+incompatible
+	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.24.1
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
+	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
 	k8s.io/apiserver v0.25.4
@@ -78,7 +80,6 @@ require (
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -138,7 +139,6 @@ require (
 	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/net v0.2.0 // indirect
-	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783 // indirect
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect

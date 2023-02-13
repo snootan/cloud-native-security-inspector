@@ -336,7 +336,7 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 	if policy.Spec.Inspection.Assessment.Governor.Enabled {
 		governorConfig := policy.Spec.Inspection.Assessment.Governor
 		exporter := governor.GovernorExporter{}
-		if err := exporter.SendReportToGovernor(report, governorConfig.OrgID); err != nil {
+		if err := exporter.SendReportToGovernor(ctx, report, governorConfig.OrgID); err != nil {
 			return err
 		}
 	}

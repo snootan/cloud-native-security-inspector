@@ -7,6 +7,7 @@ import (
 	api "github.com/vmware-tanzu/cloud-native-security-inspector/src/api/v1alpha1"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
 	openapi "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/go-client"
+	cspauth "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/httpauth"
 	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
 	"os"
@@ -20,7 +21,7 @@ type GovernorExporter struct {
 }
 
 // SendReportToGovernor is used to send report to governor url http end point.
-func (g GovernorExporter) SendReportToGovernor(report *api.AssessmentReport, orgID string) error {
+func (g GovernorExporter) SendReportToGovernor(ctx context.Context, report *api.AssessmentReport, orgID string) error {
 	// Check for clusterID, if not exist, create and assign it to ClusterID.
 	getClusterID()
 
@@ -40,9 +41,22 @@ func (g GovernorExporter) SendReportToGovernor(report *api.AssessmentReport, org
 	kubernetesCluster := getAPIRequest(*report)
 	kubernetesCluster.Name = clusterName
 
+	provider, ok := ctx.Value("cspProvider").(cspauth.Provider)
+	if !ok {
+		log.Error(" CSP Provider not found!")
+	}
+
+	governorAccessToken, err := provider.GetBearerToken(ctx)
+	if err != nil {
+		log.Error("Error while retrieving access token !")
+		return err
+	}
+
+	ctx = context.WithValue(ctx, openapi.ContextAccessToken, governorAccessToken)
+
 	// Create api client to governor api.
 	apiClient := openapi.NewAPIClient(openapi.NewConfiguration())
-	apiSaveClusterRequest := apiClient.WorkloadsApi.SaveCluster(context.Background(), orgID, ClusterID.String())
+	apiSaveClusterRequest := apiClient.WorkloadsApi.SaveCluster(ctx, orgID, ClusterID.String())
 
 	// Call api cluster to send telemetry data and get response.
 	response, err := apiSaveClusterRequest.Cluster(openapi.KubernetesClusterAsCluster(kubernetesCluster)).Execute()

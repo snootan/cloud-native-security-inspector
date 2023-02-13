@@ -57,7 +57,7 @@ func (a *cspAuth) refreshToken(ctx context.Context) error {
 }
 
 func NewCSPAuth(ctx context.Context, apiToken string) (Provider, error) {
-	tokenManager, err := cspauth.InitTokenManagerClient(cspauth.ConsoleDev)
+	tokenManager, err := cspauth.InitTokenManagerClientWithDefaultConsole()
 	if err != nil {
 		return nil, fmt.Errorf("initializing CSP : %w", err)
 	}

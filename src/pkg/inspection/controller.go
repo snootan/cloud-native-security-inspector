@@ -335,8 +335,16 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 	// Read config from InspectionPolicy, send assessment reports to Governor api if governor enabled.
 	if policy.Spec.Inspection.Assessment.Governor.Enabled {
 		governorConfig := policy.Spec.Inspection.Assessment.Governor
-		exporter := governor.GovernorExporter{}
-		if err := exporter.SendReportToGovernor(ctx, report, governorConfig.OrgID); err != nil {
+
+
+		exporter := governor.GovernorExporter{
+			Report:    report,
+			ClusterID: governorConfig.ClusterID,
+			ApiURL:    governorConfig.URL,
+			ApiToken:  governorConfig.APIToken,
+		}
+
+		if err := exporter.SendReportToGovernor(ctx); err != nil {
 			return err
 		}
 	}

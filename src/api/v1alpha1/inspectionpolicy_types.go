@@ -125,7 +125,13 @@ type Governor struct {
 	Enabled bool `json:"enabled"`
 	// Unique identification for workload
 	// +kubebuilder:validation:Optional
-	OrgID string `json:"orgId"`
+	ClusterID string `json:"clusterId"`
+	// Api url to send telemetry data
+	// +kubebuilder:validation:Optional
+	URL string `json:"url"`
+	// Api token for user authentication
+	// +kubebuilder:validation:Optional
+	APIToken string `json:"apiToken"`
 }
 
 // FollowupAction defines what actions should be applied when security expectations are matched.

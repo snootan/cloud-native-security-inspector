@@ -3,11 +3,10 @@ package consumers
 import (
 	"context"
 	"errors"
-	"github.com/google/uuid"
 	api "github.com/vmware-tanzu/cloud-native-security-inspector/src/api/v1alpha1"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
-	openapi "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/go-client"
 	cspauth "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/httpauth"
+	openapi "gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client"
 	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
 	"os"
@@ -15,16 +14,15 @@ import (
 	"path/filepath"
 )
 
-var ClusterID = uuid.New()
-
 type GovernorExporter struct {
+	Report    *api.AssessmentReport
+	ClusterID string
+	ApiURL    string
+	ApiToken  string
 }
 
 // SendReportToGovernor is used to send report to governor url http end point.
-func (g GovernorExporter) SendReportToGovernor(ctx context.Context, report *api.AssessmentReport, orgID string) error {
-	// Check for clusterID, if not exist, create and assign it to ClusterID.
-	getClusterID()
-
+func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	if _, ok := os.LookupEnv("HOME"); !ok {
 		u, err := user.Current()
@@ -38,7 +36,7 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context, report *api.
 	clusterName := loadConfigWithContext(loadingRules)
 
 	// Get api request model from assessment report.
-	kubernetesCluster := getAPIRequest(*report)
+	kubernetesCluster := getAPIRequest(*g.Report)
 	kubernetesCluster.Name = clusterName
 
 	provider, ok := ctx.Value("cspProvider").(cspauth.Provider)
@@ -56,10 +54,10 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context, report *api.
 
 	// Create api client to governor api.
 	apiClient := openapi.NewAPIClient(openapi.NewConfiguration())
-	apiSaveClusterRequest := apiClient.WorkloadsApi.SaveCluster(ctx, orgID, ClusterID.String())
+	apiSaveClusterRequest := apiClient.ClustersApi.SaveCluster(ctx, g.ClusterID)
 
 	// Call api cluster to send telemetry data and get response.
-	response, err := apiSaveClusterRequest.Cluster(openapi.KubernetesClusterAsCluster(kubernetesCluster)).Execute()
+	response, err := apiSaveClusterRequest.KubernetesClusterRequest(kubernetesCluster).Execute()
 	if err != nil {
 		return err
 	}
@@ -71,11 +69,10 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context, report *api.
 }
 
 // getAPIRequest is used to map assessment report to client model.
-func getAPIRequest(doc api.AssessmentReport) *openapi.KubernetesCluster {
-	kubernetesCluster := openapi.NewKubernetesClusterWithDefaults()
+func getAPIRequest(doc api.AssessmentReport) openapi.KubernetesClusterRequest {
+	kubernetesCluster := openapi.NewKubernetesClusterRequestWithDefaults()
 	for _, nsa := range doc.Spec.NamespaceAssessments {
 		for _, workloadAssessment := range nsa.WorkloadAssessments {
-			kubernetesCluster.Kind = "KUBERNETES"
 			kubernetesWorkloads := openapi.NewKubernetesWorkloadWithDefaults()
 			kubernetesWorkloads.Name = workloadAssessment.Workload.Name
 			kubernetesWorkloads.Kind = workloadAssessment.Workload.Kind
@@ -85,7 +82,7 @@ func getAPIRequest(doc api.AssessmentReport) *openapi.KubernetesCluster {
 				containerData := openapi.NewContainerWithDefaults()
 				for _, container := range pod.Containers {
 					containerData.Name = container.Name
-					containerData.ImageID = container.ImageID
+					containerData.ImageId = container.ImageID
 					containerData.Image = container.Image
 					kubernetesWorkloads.Containers = append(kubernetesWorkloads.Containers, *containerData)
 				}
@@ -93,7 +90,7 @@ func getAPIRequest(doc api.AssessmentReport) *openapi.KubernetesCluster {
 			kubernetesCluster.Workloads = append(kubernetesCluster.Workloads, *kubernetesWorkloads)
 		}
 	}
-	return kubernetesCluster
+	return *kubernetesCluster
 }
 
 // loadConfigWithContext is used get current cluster name
@@ -108,10 +105,4 @@ func loadConfigWithContext(loader clientcmd.ClientConfigLoader) string {
 	}
 
 	return config.CurrentContext
-}
-
-func getClusterID() {
-	if ClusterID.String() == "" {
-		ClusterID = uuid.New()
-	}
 }

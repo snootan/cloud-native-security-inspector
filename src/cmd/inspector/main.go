@@ -9,8 +9,10 @@ import (
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
 	cspauth "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/httpauth"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/inspection"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	secret "k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -21,6 +23,9 @@ var (
 	scheme  = runtime.NewScheme()
 	rootCtx = context.Background()
 )
+
+const secretNamespace = "default"
+const secretName = "harsh-secret1"
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -43,6 +48,7 @@ func main() {
 	k8sClient, err := client.New(ctrl.GetConfigOrDie(), client.Options{
 		Scheme: scheme,
 	})
+
 	if err != nil {
 		log.Error(err, "unable to create k8s client")
 		os.Exit(1)
@@ -59,7 +65,14 @@ func main() {
 	}
 
 	if inspectionPolicy.Spec.Inspection.Assessment.Governor.Enabled {
-		cspProvider, err := cspauth.NewCSPAuth(ctx, "06GMiFvxbOXfnFowsKc7cTBp8MlX6Okco3qYVqU_VHO_vvIf-jNCrO3VlnlK6MwB")
+		config, err := secret.NewForConfig(ctrl.GetConfigOrDie())
+		getSecret, err := config.CoreV1().Secrets(secretNamespace).Get(ctx, "harsh-secret-prod", metav1.GetOptions{})
+		if err != nil {
+			log.Error(err, "Failed to fetch secret")
+		}
+		cspApiToken := string(getSecret.Data["accessSecret"])
+		log.Info(cspApiToken)
+		cspProvider, err := cspauth.NewCSPAuth(ctx, cspApiToken)
 		if err != nil {
 			log.Error(err, " unable to establish connection with CSP, this is mandatory for connecting Governor back end!")
 			os.Exit(1)

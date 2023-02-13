@@ -186,8 +186,14 @@ spec:
                             default: false
                             description: Indicate whether to send the reports to governor
                             type: boolean
-                          orgId:
+                          clusterId:
                             description: Unique identification for workload
+                            type: string
+                          url:
+                            description: Api url to send telemetry data
+                            type: string
+                          apiToken:
+                            description: Api token for user authentication
                             type: string
                         type: object
                     required:

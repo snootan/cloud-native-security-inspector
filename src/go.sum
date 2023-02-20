@@ -788,8 +788,8 @@ github.com/yuin/gopher-lua v0.0.0-20171031051903-609c9cd26973/go.mod h1:aEV29Xrm
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
 gitlab.eng.vmware.com/csp/go-framework v0.1.36 h1:XVUJLAQtAaEnN6Fuvni6/2/+Ljt+QQGQaSZ5fd2ZpG4=
 gitlab.eng.vmware.com/csp/go-framework v0.1.36/go.mod h1:B5K0IScmZTuUqMLq2u0iNQqiTUwAAZjFGDeL1HzFpEk=
-gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client v0.0.0-20230213153333-158da97aac53 h1:a1Xa7i9FOnW72qQBC7pPTLrcmUcu4/dS0fpxqAGxQDs=
-gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client v0.0.0-20230213153333-158da97aac53/go.mod h1:Z3g5cIHSpGMDg7W8dXek1xsxZn4ZsOqNCu5vBXY0DXM=
+gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client v0.0.0-20230213103814-46a81ae81943 h1:L8I5kOJ/JOALYoTEaKjtmgAAexo6zHhEe1YI6FJBs9o=
+gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client v0.0.0-20230213103814-46a81ae81943/go.mod h1:Z3g5cIHSpGMDg7W8dXek1xsxZn4ZsOqNCu5vBXY0DXM=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.mongodb.org/mongo-driver v1.7.3/go.mod h1:NqaYOwnXWr5Pm7AOpO5QFxKJ503nbMse/R79oO62zWg=
 go.mongodb.org/mongo-driver v1.7.5/go.mod h1:VXEWRZ6URJIkUq2SCAyapmhH0ZLRBP+FT4xhp5Zvxng=

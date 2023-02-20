@@ -59,9 +59,7 @@ spec:
       openSearchPasswd: "admin"
       governor:
         enabled: true
-        clusterId: "65a03970-c53a-4ba1-8d1f-42c9f95d2761"
-        url: "app-catalog.vmware.com/api"
-        apiToken: "n6yDMkMEghPUYJDGsn39I_GYNnPh4Vi-LnaH2URjpgwcXbFIVYzMU-n8LRzTJGKO"
+        orgId: testing1234567
     baselines:
       - kind: "vulnerability"
         baseline: "High"

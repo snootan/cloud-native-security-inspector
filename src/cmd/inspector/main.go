@@ -48,6 +48,7 @@ func main() {
 	k8sClient, err := client.New(ctrl.GetConfigOrDie(), client.Options{
 		Scheme: scheme,
 	})
+
 	if err != nil {
 		log.Error(err, "unable to create k8s client")
 		os.Exit(1)

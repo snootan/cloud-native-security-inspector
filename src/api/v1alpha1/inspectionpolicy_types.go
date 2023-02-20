@@ -123,7 +123,7 @@ type Governor struct {
 	// Indicate whether to send the reports to governor
 	// +kubebuilder:default:=false
 	Enabled bool `json:"enabled"`
-	// Unique identifier of the cluster
+	// Unique identification for workload
 	// +kubebuilder:validation:Optional
 	ClusterID string `json:"clusterId"`
 	// Api url to send telemetry data

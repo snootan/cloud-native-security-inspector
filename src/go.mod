@@ -22,7 +22,7 @@ require (
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
 	gitlab.eng.vmware.com/csp/go-framework v0.1.36
-	gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client v0.0.0-20230213153333-158da97aac53
+	gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client v0.0.0-20230213103814-46a81ae81943
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
 	k8s.io/apiserver v0.25.4

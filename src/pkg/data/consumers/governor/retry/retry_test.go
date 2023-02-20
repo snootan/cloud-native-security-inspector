@@ -3,13 +3,14 @@ package retry_test
 import (
 	"context"
 	"fmt"
+	"github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/retry"
 	"testing"
 	"time"
 )
 
 func TestSuccessCase(t *testing.T) {
 	var count int
-	err := NewRetry().Run(context.Background(), func() (bool, error) {
+	err := retry.NewRetry().Run(context.Background(), func() (bool, error) {
 		count++
 		return true, nil
 	})
@@ -32,9 +33,9 @@ func TestWithMaxAttempts(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%d attempts", tc.maxAttempts), func(t *testing.T) {
 			var count int
-			if err := NewRetry(
-				WithMaxAttempts(tc.maxAttempts),
-				WithFixedDelay(10*time.Millisecond),
+			if err := retry.NewRetry(
+				retry.WithMaxAttempts(tc.maxAttempts),
+				retry.WithFixedDelay(10*time.Millisecond),
 			).Run(context.Background(), func() (bool, error) {
 				count++
 				return count == tc.maxAttempts, nil

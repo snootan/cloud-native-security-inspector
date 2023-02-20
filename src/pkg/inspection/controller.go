@@ -341,7 +341,7 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 			ApiURL:    governorConfig.URL,
 			ApiToken:  governorConfig.APIToken,
 		}
-		if err := exporter.SendReportToGovernor(); err != nil {
+		if err := exporter.SendReportToGovernor(ctx); err != nil {
 			return err
 		}
 	}

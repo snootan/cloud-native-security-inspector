@@ -7,9 +7,12 @@ import (
 	"flag"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/api/v1alpha1"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
+	cspauth "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/httpauth"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/inspection"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	secret "k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -20,6 +23,9 @@ var (
 	scheme  = runtime.NewScheme()
 	rootCtx = context.Background()
 )
+
+const secretNamespace = "default"
+const secretName = "harsh-secret1"
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -34,6 +40,7 @@ func main() {
 	var policy string
 
 	flag.StringVar(&policy, "policy", "", "name of the inspection policy")
+	policy = "inspectionpolicy-sample"
 	flag.Parse()
 	log.Infof("policy name %s", policy)
 	log.Info("inspector scanning")
@@ -54,6 +61,22 @@ func main() {
 	if err := k8sClient.Get(ctx, client.ObjectKey{Name: policy}, inspectionPolicy); err != nil {
 		log.Error(err, "unable to retrieve the specified inspection policy")
 		os.Exit(1)
+	}
+
+	if inspectionPolicy.Spec.Inspection.Assessment.Governor.Enabled {
+		config, err := secret.NewForConfig(ctrl.GetConfigOrDie())
+		getSecret, err := config.CoreV1().Secrets(secretNamespace).Get(ctx, "harsh-secret-prod", metav1.GetOptions{})
+		if err != nil {
+			log.Error(err, "Failed to fetch secret")
+		}
+		cspApiToken := string(getSecret.Data["accessSecret"])
+		log.Info(cspApiToken)
+		cspProvider, err := cspauth.NewCSPAuth(ctx, cspApiToken)
+		if err != nil {
+			log.Error(err, " unable to establish connection with CSP, this is mandatory for connecting Governor back end!")
+			os.Exit(1)
+		}
+		ctx = context.WithValue(ctx, "cspProvider", cspProvider)
 	}
 
 	runner := inspection.NewController().

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	api "github.com/vmware-tanzu/cloud-native-security-inspector/src/api/v1alpha1"
+	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
+	cspauth "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/httpauth"
 	openapi "gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client"
 	"net/http"
 )
@@ -16,9 +18,22 @@ type GovernorExporter struct {
 }
 
 // SendReportToGovernor is used to send report to governor url http end point.
-func (g GovernorExporter) SendReportToGovernor() error {
+func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 	// Get api request model from assessment report.
 	kubernetesCluster := getAPIRequest(*g.Report)
+
+	provider, ok := ctx.Value("cspProvider").(cspauth.Provider)
+	if !ok {
+		log.Error(" CSP Provider not found!")
+	}
+
+	governorAccessToken, err := provider.GetBearerToken(ctx)
+	if err != nil {
+		log.Error("Error while retrieving access token !")
+		return err
+	}
+
+	ctx = context.WithValue(ctx, openapi.ContextAccessToken, governorAccessToken)
 
 	// Create api client to governor api.
 	apiClient := openapi.NewAPIClient(openapi.NewConfiguration())

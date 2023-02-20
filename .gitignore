@@ -20,7 +20,7 @@
 # Except this file
 !.gitignore
 
-#portal
+#portal 
 dist/
 node_modules/
 coverage/

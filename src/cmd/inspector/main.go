@@ -24,8 +24,8 @@ var (
 	rootCtx = context.Background()
 )
 
-const secretNamespace = "default"
-const secretName = "harsh-secret1"
+const secretNamespace = "cnsi-system"
+const secretName = "csp-api-token"
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -65,13 +65,12 @@ func main() {
 	}
 
 	if inspectionPolicy.Spec.Inspection.Assessment.Governor.Enabled {
-		config, err := secret.NewForConfig(ctrl.GetConfigOrDie())
-		getSecret, err := config.CoreV1().Secrets(secretNamespace).Get(ctx, "harsh-secret-prod", metav1.GetOptions{})
+		err, cspApiToken := getCSPTokenFromSecret(ctx, secretNamespace, secretName)
 		if err != nil {
-			log.Error(err, "Failed to fetch secret")
+			log.Error(err, " unable to fetch CSP api-token, this is mandatory for connecting Governor back end!")
+			os.Exit(1)
 		}
-		cspApiToken := string(getSecret.Data["accessSecret"])
-		log.Info(cspApiToken)
+
 		cspProvider, err := cspauth.NewCSPAuth(ctx, cspApiToken)
 		if err != nil {
 			log.Error(err, " unable to establish connection with CSP, this is mandatory for connecting Governor back end!")
@@ -89,4 +88,15 @@ func main() {
 		log.Error(err, "controller run")
 		os.Exit(1)
 	}
+}
+
+func getCSPTokenFromSecret(ctx context.Context, ns string, secretName string) (error, string) {
+	config, err := secret.NewForConfig(ctrl.GetConfigOrDie())
+	getSecret, err := config.CoreV1().Secrets(ns).Get(ctx, secretName, metav1.GetOptions{})
+	if err != nil {
+		log.Error(err, "Failed to fetch secret")
+		return err, ""
+	}
+	cspApiToken := string(getSecret.Data["accessSecret"])
+	return err, cspApiToken
 }

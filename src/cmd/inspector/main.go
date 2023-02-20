@@ -24,8 +24,8 @@ var (
 	rootCtx = context.Background()
 )
 
-const secretNamespace = "cnsi-system"
-const secretName = "csp-api-token"
+const cspSecretNamespace = "cnsi-system"
+const cspSecretName = "csp-api-token"
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -40,7 +40,6 @@ func main() {
 	var policy string
 
 	flag.StringVar(&policy, "policy", "", "name of the inspection policy")
-	policy = "inspectionpolicy-sample"
 	flag.Parse()
 	log.Infof("policy name %s", policy)
 	log.Info("inspector scanning")
@@ -65,7 +64,7 @@ func main() {
 	}
 
 	if inspectionPolicy.Spec.Inspection.Assessment.Governor.Enabled {
-		err, cspApiToken := getCSPTokenFromSecret(ctx, secretNamespace, secretName)
+		err, cspApiToken := getCSPTokenFromSecret(ctx, cspSecretNamespace, cspSecretName)
 		if err != nil {
 			log.Error(err, " unable to fetch CSP api-token, this is mandatory for connecting Governor back end!")
 			os.Exit(1)

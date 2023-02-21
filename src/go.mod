@@ -22,12 +22,11 @@ require (
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
 	gitlab.eng.vmware.com/csp/go-framework v0.1.36
-	gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client v0.0.0-20230213103814-46a81ae81943
+	gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client v0.0.0-20230217132810-674c08a7361b
 	k8s.io/api v0.25.4
 	k8s.io/apimachinery v0.25.4
 	k8s.io/apiserver v0.25.4
 	k8s.io/client-go v0.25.4
-	sigs.k8s.io/cluster-api v1.3.3
 	sigs.k8s.io/controller-runtime v0.13.1
 	sigs.k8s.io/e2e-framework v0.0.8
 )
@@ -47,7 +46,6 @@ require (
 	github.com/aws/smithy-go v1.13.3 // indirect
 	github.com/beego/beego v1.12.11 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -105,6 +103,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/onsi/ginkgo/v2 v2.6.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -158,7 +157,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.25.2 // indirect
-	k8s.io/cluster-bootstrap v0.25.0 // indirect
 	k8s.io/component-base v0.25.4 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803164354-a70c9af30aea // indirect

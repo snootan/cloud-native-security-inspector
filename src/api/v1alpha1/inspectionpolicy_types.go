@@ -123,15 +123,15 @@ type Governor struct {
 	// Indicate whether to send the reports to governor
 	// +kubebuilder:default:=false
 	Enabled bool `json:"enabled"`
-	// Unique identification for workload
+	// Unique identifier of the cluster
 	// +kubebuilder:validation:Optional
 	ClusterID string `json:"clusterId"`
 	// Api url to send telemetry data
 	// +kubebuilder:validation:Optional
 	URL string `json:"url"`
-	// Api token for user authentication
+	// Secret name where CSP api token is stored
 	// +kubebuilder:validation:Optional
-	APIToken string `json:"apiToken"`
+	CspSecretName string `json:"apiToken"`
 }
 
 // FollowupAction defines what actions should be applied when security expectations are matched.

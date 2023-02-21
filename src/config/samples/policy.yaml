@@ -59,7 +59,9 @@ spec:
       openSearchPasswd: "admin"
       governor:
         enabled: true
-        orgId: testing1234567
+        clusterId: "65a03970-c53a-4ba1-8d1f-42c9f95d2761"
+        url: "app-catalog.vmware.com/api"
+        cspSecretName: "cspSecret"
     baselines:
       - kind: "vulnerability"
         baseline: "High"

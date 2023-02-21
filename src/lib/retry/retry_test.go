@@ -3,7 +3,7 @@ package retry_test
 import (
 	"context"
 	"fmt"
-	"github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/retry"
+	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/retry"
 	"testing"
 	"time"
 )

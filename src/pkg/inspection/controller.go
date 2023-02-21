@@ -339,7 +339,6 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 			Report:    report,
 			ClusterID: governorConfig.ClusterID,
 			ApiURL:    governorConfig.URL,
-			ApiToken:  governorConfig.APIToken,
 		}
 		if err := exporter.SendReportToGovernor(ctx); err != nil {
 			return err
@@ -371,15 +370,15 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 }
 
 func exportReportToOpenSearch(report *v1alpha1.AssessmentReport, policy *v1alpha1.InspectionPolicy) error {
-	client := osearch.NewClient([]byte{},
+	openSearchClient := osearch.NewClient([]byte{},
 		policy.Spec.Inspection.Assessment.OpenSearchAddr,
 		policy.Spec.Inspection.Assessment.OpenSearchUser,
 		policy.Spec.Inspection.Assessment.OpenSearchPasswd)
-	if client == nil {
-		log.Info("OpenSearch client is nil")
+	if openSearchClient == nil {
+		log.Info("OpenSearch openSearchClient is nil")
 	}
-	exporter := osearch.OpenSearchExporter{Client: client}
-	err := exporter.NewExporter(client, "assessment_report")
+	exporter := osearch.OpenSearchExporter{Client: openSearchClient}
+	err := exporter.NewExporter(openSearchClient, "assessment_report")
 	if err != nil {
 		return err
 	}
@@ -407,17 +406,17 @@ func exportReportToES(report *v1alpha1.AssessmentReport, policy *v1alpha1.Inspec
 	}
 	log.Info("ES config: ", "addr", clientArgs.addr)
 	log.Info("ES config: ", "clientArgs.username", clientArgs.username)
-	client := es.NewClient(clientArgs.cert, clientArgs.addr, clientArgs.username, clientArgs.passwd)
-	if client == nil {
-		log.Info("ES client is nil")
+	esClient := es.NewClient(clientArgs.cert, clientArgs.addr, clientArgs.username, clientArgs.passwd)
+	if esClient == nil {
+		log.Info("ES esClient is nil")
 	}
 
 	if err := es.TestClient(); err != nil {
-		log.Info("client test error")
+		log.Info("esClient test error")
 		return err
 	}
-	exporter := es.ElasticSearchExporter{Client: client}
-	err := exporter.NewExporter(client, "assessment_report")
+	exporter := es.ElasticSearchExporter{Client: esClient}
+	err := exporter.NewExporter(esClient, "assessment_report")
 	if err != nil {
 		return err
 	}

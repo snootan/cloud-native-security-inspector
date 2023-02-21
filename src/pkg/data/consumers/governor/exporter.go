@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	api "github.com/vmware-tanzu/cloud-native-security-inspector/src/api/v1alpha1"
+	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/cspauth"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
-	cspauth "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/httpauth"
 	openapi "gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client"
 	"net/http"
 )
@@ -14,7 +14,6 @@ type GovernorExporter struct {
 	Report    *api.AssessmentReport
 	ClusterID string
 	ApiURL    string
-	ApiToken  string
 }
 
 // SendReportToGovernor is used to send report to governor url http end point.

@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math"
-	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -39,13 +36,6 @@ func WithMaxAttempts(n int) Option {
 	}
 }
 
-// WithCustomDelayFunc allows configuring a custom waiting strategy between retries
-func WithCustomDelayFunc(fn delayFunc) Option {
-	return func(o *retryConfig) {
-		o.delayFunc = fn
-	}
-}
-
 // WithFixedDelay allows configuring a fixed-delay waiting strategy between retries
 func WithFixedDelay(delay time.Duration) Option {
 	return func(o *retryConfig) {
@@ -59,16 +49,6 @@ func WithIncrementDelay(baseDuration time.Duration, increment time.Duration) Opt
 		o.delayFunc = func(n int) time.Duration {
 			stepIncrement := increment * time.Duration(n)
 			return baseDuration + stepIncrement
-		}
-	}
-}
-
-// WithExponentialBackoff allows configuring an exponential backoff waiting strategy between retries
-func WithExponentialBackoff(baseDuration time.Duration, factor float64) Option {
-	return func(o *retryConfig) {
-		o.delayFunc = func(n int) time.Duration {
-			stepMultiplier := math.Pow(factor, float64(n))
-			return baseDuration * time.Duration(stepMultiplier)
 		}
 	}
 }
@@ -125,22 +105,4 @@ func (r *Retry) SetNextRetry(duration time.Duration) {
 		r.delayFunc = orig // restore original function
 		return duration
 	}
-}
-
-// IsRetriableHTTPStatus checks an http.Response to detect if it should be retried, and when (if specified)
-func IsRetriableHTTPStatus(resp *http.Response) (bool, time.Duration) {
-	for _, code := range []int{
-		http.StatusBadGateway,
-		http.StatusServiceUnavailable,
-		http.StatusRequestTimeout,
-		http.StatusTooManyRequests,
-	} {
-		if resp.StatusCode == code {
-			if retryAfter, err := strconv.Atoi(resp.Header.Get("Retry-After")); err != nil {
-				return true, time.Duration(retryAfter) * time.Second
-			}
-			return true, 0
-		}
-	}
-	return false, 0
 }

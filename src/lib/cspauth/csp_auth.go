@@ -1,13 +1,11 @@
-package httpauth
+package cspauth
 
 import (
 	"context"
 	"fmt"
-	"github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/retry"
+	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/retry"
 	"math"
 	"time"
-
-	cspauth "gitlab.eng.vmware.com/csp/go-framework/auth"
 )
 
 const tokenMaxAgeSeconds = 600
@@ -19,8 +17,8 @@ type Provider interface {
 }
 
 type cspAuth struct {
-	apiToken     string
-	tokenManager cspauth.TokenManager
+	apiToken  string
+	cspClient CSPClient
 
 	currentToken string
 	expiration   time.Time
@@ -42,7 +40,7 @@ func (a *cspAuth) refreshToken(ctx context.Context) error {
 		retry.WithIncrementDelay(5*time.Second, 5*time.Second),
 	).Run(ctx, func() (bool, error) {
 		now := time.Now()
-		cspAuthResponse, err := a.tokenManager.GetTokenFromRefreshToken(ctx, a.apiToken)
+		cspAuthResponse, err := a.cspClient.GetCspAuthorization(ctx, a.apiToken)
 		if err != nil {
 			fmt.Printf("We got an error back from CSP %s", err)
 			return false, nil
@@ -57,12 +55,12 @@ func (a *cspAuth) refreshToken(ctx context.Context) error {
 }
 
 func NewCSPAuth(ctx context.Context, apiToken string) (Provider, error) {
-	tokenManager, err := cspauth.InitTokenManagerClientWithDefaultConsole()
+	cspClient, err := NewCspHTTPClient()
 	if err != nil {
 		return nil, fmt.Errorf("initializing CSP : %w", err)
 	}
 
-	provider := &cspAuth{apiToken: apiToken, tokenManager: tokenManager}
+	provider := &cspAuth{apiToken: apiToken, cspClient: cspClient}
 	if err := provider.refreshToken(ctx); err != nil {
 		return nil, fmt.Errorf("validating API token validity: %w", err)
 	}

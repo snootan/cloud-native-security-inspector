@@ -115,6 +115,7 @@ type Assessment struct {
 	// +kubebuilder:validation:Optional
 	OpenSearchCert string `json:"openSearchCert"`
 	// Indicate whether to config of governor
+	// +kubebuilder:validation:Optional
 	Governor Governor `json:"governor"`
 }
 
@@ -131,7 +132,7 @@ type Governor struct {
 	URL string `json:"url"`
 	// Secret name where CSP api token is stored
 	// +kubebuilder:validation:Optional
-	CspSecretName string `json:"apiToken"`
+	CspSecretName string `json:"cspSecretName"`
 }
 
 // FollowupAction defines what actions should be applied when security expectations are matched.

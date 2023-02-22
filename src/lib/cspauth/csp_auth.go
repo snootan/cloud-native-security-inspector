@@ -3,12 +3,19 @@ package cspauth
 import (
 	"context"
 	"fmt"
+	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/retry"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"math"
+	"sigs.k8s.io/controller-runtime"
 	"time"
 )
 
-const tokenMaxAgeSeconds = 600
+const (
+	tokenMaxAgeSeconds   = 600
+	providerAccessSecret = "accessSecret"
+)
 
 // Provider is an interface to interact with an authorization service
 type Provider interface {
@@ -54,7 +61,11 @@ func (a *cspAuth) refreshToken(ctx context.Context) error {
 	})
 }
 
-func NewCSPAuth(ctx context.Context, apiToken string) (Provider, error) {
+func NewCSPAuth(ctx context.Context, cspSecretNamespace string, cspSecretName string) (Provider, error) {
+	apiToken, err := getCSPTokenFromSecret(ctx, cspSecretNamespace, cspSecretName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch CSP api-token: %w", err)
+	}
 	cspClient, err := NewCspHTTPClient()
 	if err != nil {
 		return nil, fmt.Errorf("initializing CSP : %w", err)
@@ -66,4 +77,19 @@ func NewCSPAuth(ctx context.Context, apiToken string) (Provider, error) {
 	}
 
 	return provider, nil
+}
+
+func getCSPTokenFromSecret(ctx context.Context, ns string, secretName string) (string, error) {
+	config, err := kubernetes.NewForConfig(controllerruntime.GetConfigOrDie())
+	if err != nil {
+		log.Error(err, "Failed to get config while fetching secret!")
+		return "", err
+	}
+	secret, err := config.CoreV1().Secrets(ns).Get(ctx, secretName, v1.GetOptions{})
+	if err != nil {
+		log.Error(err, "Failed to fetch secret")
+		return "", err
+	}
+	cspApiToken := string(secret.Data[providerAccessSecret])
+	return cspApiToken, err
 }

@@ -335,13 +335,19 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 	// Read config from InspectionPolicy, send assessment reports to Governor api if governor enabled.
 	if policy.Spec.Inspection.Assessment.Governor.Enabled {
 		governorConfig := policy.Spec.Inspection.Assessment.Governor
+		if governorConfig.ClusterID == "" || governorConfig.URL == "" || governorConfig.CspSecretName == "" {
+			log.Error("Either ClusterID or URL or CspSecretName is empty")
+			return errors.New("Either ClusterID or URL or CspSecretName is empty")
+		}
 		exporter := governor.GovernorExporter{
 			Report:    report,
 			ClusterID: governorConfig.ClusterID,
 			ApiURL:    governorConfig.URL,
 		}
-		if err := exporter.SendReportToGovernor(ctx); err != nil {
-			return err
+
+		if apiResponseErr := exporter.SendReportToGovernor(ctx); apiResponseErr != nil {
+			log.Error("Err response from governor exporter", apiResponseErr)
+			return apiResponseErr
 		}
 	}
 

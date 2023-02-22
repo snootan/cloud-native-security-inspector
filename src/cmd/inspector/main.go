@@ -9,10 +9,8 @@ import (
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/cspauth"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/inspection"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	secret "k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -25,7 +23,7 @@ var (
 )
 
 const (
-	cspSecretNamespace = "cnsi-system"
+	cspSecretNamespace = "cspSecret"
 )
 
 func init() {
@@ -65,15 +63,9 @@ func main() {
 	}
 
 	if inspectionPolicy.Spec.Inspection.Assessment.Governor.Enabled {
-		err, cspApiToken := getCSPTokenFromSecret(ctx, cspSecretNamespace, inspectionPolicy.Spec.Inspection.Assessment.Governor.CspSecretName)
+		cspProvider, err := cspauth.NewCSPAuth(ctx, cspSecretNamespace, inspectionPolicy.Spec.Inspection.Assessment.Governor.CspSecretName)
 		if err != nil {
-			log.Error(err, " unable to fetch CSP api-token, this is mandatory for connecting Governor back end!")
-			os.Exit(1)
-		}
-
-		cspProvider, err := cspauth.NewCSPAuth(ctx, cspApiToken)
-		if err != nil {
-			log.Error(err, " unable to establish connection with CSP, this is mandatory for connecting Governor back end!")
+			log.Error("unable to establish connection with CSP, this is mandatory for connecting Governor back end!: %w", err)
 			os.Exit(1)
 		}
 		ctx = context.WithValue(ctx, "cspProvider", cspProvider)
@@ -88,15 +80,4 @@ func main() {
 		log.Error(err, "controller run")
 		os.Exit(1)
 	}
-}
-
-func getCSPTokenFromSecret(ctx context.Context, ns string, secretName string) (error, string) {
-	config, err := secret.NewForConfig(ctrl.GetConfigOrDie())
-	getSecret, err := config.CoreV1().Secrets(ns).Get(ctx, secretName, metav1.GetOptions{})
-	if err != nil {
-		log.Error(err, "Failed to fetch secret")
-		return err, ""
-	}
-	cspApiToken := string(getSecret.Data["accessSecret"])
-	return err, cspApiToken
 }

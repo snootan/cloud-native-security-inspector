@@ -143,11 +143,11 @@ spec:
                       governor:
                         description: Indicate whether to config of governor
                         properties:
-                          clusterId:
-                            description: Unique identifier of the cluster
-                            type: string
                           cspSecretName:
                             description: Secret name where CSP api token is stored
+                            type: string
+                          clusterId:
+                            description: Unique identifier of the cluster
                             type: string
                           enabled:
                             default: false
@@ -695,9 +695,14 @@ spec:
                                   - metadata
                                   type: object
                                 type: array
+                              replicas:
+                                description: Replicas of this workload.
+                                format: int32
+                                type: integer
                             required:
                             - metadata
                             - pods
+                            - replicas
                             type: object
                         required:
                         - passed

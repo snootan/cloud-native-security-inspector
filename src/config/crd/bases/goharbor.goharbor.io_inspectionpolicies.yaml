@@ -155,11 +155,11 @@ spec:
                       governor:
                         description: Indicate whether to config of governor
                         properties:
-                          clusterId:
-                            description: Unique identifier of the cluster
-                            type: string
                           cspSecretName:
                             description: Secret name where CSP api token is stored
+                            type: string
+                          clusterId:
+                            description: Unique identifier of the cluster
                             type: string
                           enabled:
                             default: false

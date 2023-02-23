@@ -7,14 +7,14 @@ import (
 	api "github.com/vmware-tanzu/cloud-native-security-inspector/src/api/v1alpha1"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/cspauth"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
-	openapi "gitlab.eng.vmware.com/vac/catalog-governor/api-specs/catalog-governor-service-rest/go-client"
+	openapi "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/go-client"
 	"net/http"
 )
 
 type GovernorExporter struct {
 	Report    *api.AssessmentReport
 	ClusterID string
-	ApiURL    string
+	ApiClient *openapi.APIClient
 }
 
 // SendReportToGovernor is used to send report to governor url http end point.
@@ -35,19 +35,10 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 
 	ctx = context.WithValue(ctx, openapi.ContextAccessToken, governorAccessToken)
 
-	// Create api client to governor api.
-	config := openapi.NewConfiguration()
-
-	// Appending api URL in configuration.
-	config.Servers = openapi.ServerConfigurations{{
-		URL: g.ApiURL,
-	}}
-
-	apiClient := openapi.NewAPIClient(config)
-	apiSaveClusterRequest := apiClient.ClustersApi.UpdateTelemetry(ctx, g.ClusterID).KubernetesTelemetryRequest(kubernetesCluster)
+	apiSaveClusterRequest := g.ApiClient.ClustersApi.UpdateTelemetry(context.Background(), g.ClusterID).KubernetesTelemetryRequest(kubernetesCluster)
 
 	// Call api cluster to send telemetry data and get response.
-	response, err := apiClient.ClustersApi.UpdateTelemetryExecute(apiSaveClusterRequest)
+	response, err := g.ApiClient.ClustersApi.UpdateTelemetryExecute(apiSaveClusterRequest)
 	if err != nil {
 		log.Errorf("Governor api response error: %v", err)
 		return err

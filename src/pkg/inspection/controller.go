@@ -383,7 +383,6 @@ func exportReportToGovernor(ctx context.Context, report *v1alpha1.AssessmentRepo
 	exporter := governor.GovernorExporter{
 		Report:    report,
 		ClusterID: governorConfig.ClusterID,
-		CSPSecretName:  governorConfig.CSPSecretName,
 		ApiClient: apiClient,
 	}
 

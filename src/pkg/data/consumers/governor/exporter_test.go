@@ -3,6 +3,7 @@ package consumers
 import (
 	"context"
 	api "github.com/vmware-tanzu/cloud-native-security-inspector/src/api/v1alpha1"
+	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/cspauth"
 	openapi "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/go-client"
 	v1 "k8s.io/api/core/v1"
 	"os"
@@ -54,8 +55,9 @@ func TestSendReportToGovernorSuccess(t *testing.T) {
 		ClusterID: clusterID,
 		ApiClient: mockClient,
 	}
-
-	errFromSendReportToGovernor := g.SendReportToGovernor(context.Background())
+	provider := cspauth.NewMockProvider()
+	ctx := context.WithValue(context.Background(), "cspProvider", provider)
+	errFromSendReportToGovernor := g.SendReportToGovernor(ctx)
 	if errFromSendReportToGovernor != nil {
 		t.Fatalf("Error while updating telemetry data of workloads in cluster: %v", errFromSendReportToGovernor)
 	}

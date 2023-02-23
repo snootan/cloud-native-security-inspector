@@ -23,7 +23,7 @@ var (
 )
 
 const (
-	cspSecretNamespace = "cspSecret"
+	cspSecretNamespace = "cnsi-system"
 )
 
 func init() {

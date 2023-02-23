@@ -35,7 +35,7 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 
 	ctx = context.WithValue(ctx, openapi.ContextAccessToken, governorAccessToken)
 
-	apiSaveClusterRequest := g.ApiClient.ClustersApi.UpdateTelemetry(context.Background(), g.ClusterID).KubernetesTelemetryRequest(kubernetesCluster)
+	apiSaveClusterRequest := g.ApiClient.ClustersApi.UpdateTelemetry(ctx, g.ClusterID).KubernetesTelemetryRequest(kubernetesCluster)
 
 	// Call api cluster to send telemetry data and get response.
 	response, err := g.ApiClient.ClustersApi.UpdateTelemetryExecute(apiSaveClusterRequest)

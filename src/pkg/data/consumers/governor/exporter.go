@@ -21,7 +21,8 @@ type GovernorExporter struct {
 func (g GovernorExporter) SendReportToGovernor() error {
 	// Get governor api request model from assessment report.
 	kubernetesCluster := getGovernorAPIPayload(*g.Report)
-
+	log.Info("Payload data for governor:")
+	log.Info(kubernetesCluster)
 	apiSaveClusterRequest := g.ApiClient.ClustersApi.UpdateTelemetry(context.Background(), g.ClusterID).KubernetesTelemetryRequest(kubernetesCluster)
 
 	// Call api cluster to send telemetry data and get response.
@@ -30,7 +31,11 @@ func (g GovernorExporter) SendReportToGovernor() error {
 		log.Errorf("Governor api response error: %v", err)
 		return err
 	}
-	if response.StatusCode != http.StatusOK {
+
+	log.Info("successful called governor api")
+	log.Info(response)
+
+	if response.StatusCode != http.StatusNoContent {
 		log.Errorf("Governor api response status: %v", response.StatusCode)
 		return errors.New(fmt.Sprintf("Governor api response status: %s", response.Status))
 	}

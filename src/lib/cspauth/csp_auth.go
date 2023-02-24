@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	tokenMaxAgeSeconds   = 600
-	providerAccessSecret = "accessSecret"
+	tokenMaxAgeSeconds = 600
+	API_TOKEN          = "API_TOKEN"
 )
 
 // Provider is an interface to interact with an authorization service
@@ -90,6 +90,6 @@ func getCSPTokenFromSecret(ctx context.Context, ns string, secretName string) (s
 		log.Error(err, "Failed to fetch secret")
 		return "", err
 	}
-	cspApiToken := string(secret.Data[providerAccessSecret])
+	cspApiToken := string(secret.Data[API_TOKEN])
 	return cspApiToken, err
 }

@@ -70,5 +70,5 @@ func (m *MockClustersApi) UpdateTelemetry(ctx context.Context, clusterId string)
 }
 
 func (m *MockClustersApi) UpdateTelemetryExecute(r openapi.ApiUpdateTelemetryRequest) (*http.Response, error) {
-	return &http.Response{StatusCode: 200}, nil
+	return &http.Response{StatusCode: http.StatusNoContent}, nil
 }

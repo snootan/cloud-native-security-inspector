@@ -22,6 +22,8 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 	// Get governor api request model from assessment report.
 	kubernetesCluster := getGovernorAPIPayload(*g.Report)
 
+	log.Info("Payload data for governor:")
+	log.Info(kubernetesCluster)
 	provider, ok := ctx.Value("cspProvider").(cspauth.Provider)
 	if !ok {
 		log.Error(" CSP Provider not found!")
@@ -43,6 +45,10 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 		log.Errorf("Governor api response error: %v", err)
 		return err
 	}
+
+	log.Info("successful called governor api")
+	log.Info(response)
+
 	if response.StatusCode != http.StatusNoContent {
 		log.Errorf("Governor api response status: %v", response.StatusCode)
 		return errors.New(fmt.Sprintf("Governor api response status: %s", response.Status))

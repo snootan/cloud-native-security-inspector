@@ -342,6 +342,7 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 			return errors.New("Either ClusterID or URL or CSPSecretName is empty")
 		}
 
+		log.Info("Calling governor exporter")
 		if exporterErr := exportReportToGovernor(ctx, report, policy); exporterErr != nil {
 			log.Errorf("Error from exporter: %v", exporterErr)
 			return exporterErr

@@ -377,7 +377,9 @@ func exportReportToGovernor(ctx context.Context, report *v1alpha1.AssessmentRepo
 
 	// Create api client to governor api.
 	config := openapi.NewConfiguration()
-	config.Host = governorConfig.URL
+	config.Servers = openapi.ServerConfigurations{{
+		URL: governorConfig.URL,
+	}}
 	apiClient := openapi.NewAPIClient(config)
 
 	exporter := governor.GovernorExporter{

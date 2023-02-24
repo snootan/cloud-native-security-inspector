@@ -43,7 +43,7 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 		log.Errorf("Governor api response error: %v", err)
 		return err
 	}
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusNoContent {
 		log.Errorf("Governor api response status: %v", response.StatusCode)
 		return errors.New(fmt.Sprintf("Governor api response status: %s", response.Status))
 	}

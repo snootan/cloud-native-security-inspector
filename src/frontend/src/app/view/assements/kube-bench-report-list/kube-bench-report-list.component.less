@@ -1,6 +1,20 @@
 .report {
   position: relative;
   padding: 15px;
+  .kube-title {
+    h4 {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      margin-top: 0;
+      margin-bottom: 20px;
+      &::ng-deep {
+        clr-select-container {
+          margin-top: 0;
+        }
+      } 
+    }
+  }
   &::ng-deep {
     clr-datagrid {
       clr-dg-column {
@@ -44,7 +58,7 @@
 }
 .chart-warp {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: center;
   flex: 1;
   overflow: hidden;
   height:300px;
@@ -53,7 +67,7 @@
   position: relative;
   .circle {
     position: absolute;
-    bottom: 0px;
+    bottom: 0;
     left: 50%;
     span {
       display: inline-block;
@@ -71,7 +85,6 @@
 }
 .chart-label {
   height: 60px;
-  // background-color: yellow;
   text-align: center;
   color: #fff;
   span {
@@ -95,7 +108,7 @@
     }
     &:nth-of-type(4) {
       i {
-        background-color: #EE6666;
+        background-color: #e66;
       }
 
     }

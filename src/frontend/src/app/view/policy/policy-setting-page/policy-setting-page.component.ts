@@ -29,15 +29,15 @@ export class PolicySettingPageComponent implements OnInit {
   imageList = [
     {
       name: 'inspector',
-      url: 'projects.registry.vmware.com/cnsi/inspector:0.2'
+      url: 'projects.registry.vmware.com/cnsi/inspector:0.3'
     },
     {
       name: 'kubebench',
-      url: 'projects.registry.vmware.com/cnsi/kubebench:0.2'
+      url: 'projects.registry.vmware.com/cnsi/kubebench:0.3'
     },
     {
       name: 'risk',
-      url: 'projects.registry.vmware.com/cnsi/risk:0.2'
+      url: 'projects.registry.vmware.com/cnsi/risk:0.3'
     }
     
   ]
@@ -149,7 +149,7 @@ export class PolicySettingPageComponent implements OnInit {
         historyLimit:[5],
         suspend: [false],
         concurrencyRule:['Forbid'],
-        image:[[]],
+        image:[['inspector']],
         imagePullPolicy: ['IfNotPresent'],
         settingsName: [''],
         elasticSearchEnabled: [false],
@@ -319,10 +319,6 @@ export class PolicySettingPageComponent implements OnInit {
 
           this.policyForm.get('inspectionSetting')?.get('imagePullPolicy')?.setValue(policyList[0].spec.inspector.imagePullPolicy)
           this.policyForm.get('inspectionSetting')?.get('settingsName')?.setValue(policyList[0].spec.settingsName)
-          // this.policyForm.get('endpoint')?.setValue(policyList[0].spec.inspection.dataProvider.endpoint)
-          // this.policyForm.get('username')?.setValue(policyList[0].spec.inspection.dataProvider.credential.accessKey)
-          // this.policyForm.get('password')?.setValue(policyList[0].spec.inspection.dataProvider.credential.accessSecret)
-          // this.policyForm.get('insecure')?.setValue(policyList[0].spec.inspection.dataProvider.connection.insecure)
           this.policyForm.get('inspectionResult')?.get('generate')?.setValue(policyList[0].spec.inspection.assessment.generate)
           this.policyForm.get('inspectionResult')?.get('format')?.setValue(policyList[0].spec.inspection.assessment.format)
           this.policyForm.get('inspectionResult')?.get('liveTime')?.setValue(policyList[0].spec.inspection.assessment.liveTime)
@@ -395,7 +391,7 @@ export class PolicySettingPageComponent implements OnInit {
           this.policyForm.get('inspectionSetting')?.get('historyLimit')?.setValue(5)
           this.policyForm.get('inspectionSetting')?.get('suspend')?.setValue(false)
           this.policyForm.get('inspectionSetting')?.get('concurrencyRule')?.setValue('Forbid')
-          this.policyForm.get('inspectionSetting')?.get('image')?.setValue('projects.registry.vmware.com/cnsi/inspector:0.2')
+          this.policyForm.get('inspectionSetting')?.get('image')?.setValue('projects.registry.vmware.com/cnsi/inspector:0.3')
           this.policyForm.get('inspectionSetting')?.get('imagePullPolicy')?.setValue('IfNotPresent')
           this.policyForm.get('inspectionSetting')?.get('settingsName')?.setValue('')
           // this.policyForm.get('endpoint')?.setValue(policyList[0].spec.inspection.dataProvider.endpoint)

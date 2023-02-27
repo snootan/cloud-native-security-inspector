@@ -141,6 +141,10 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 	// Just in case.
 	if len(nsl) == 0 {
 		log.Info("no namespaces found")
+		err2 := c.checkAndSendReportToGovernor(ctx, policy, &v1alpha1.AssessmentReport{})
+		if err2 != nil {
+			return err2
+		}
 		return nil
 	}
 
@@ -333,20 +337,9 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 		}
 	}
 
-	// Read config from InspectionPolicy, send assessment reports to Governor api if governor enabled.
-	if policy.Spec.Inspection.Assessment.Governor.Enabled {
-		governorConfig := policy.Spec.Inspection.Assessment.Governor
-
-		if governorConfig.ClusterID == "" || governorConfig.URL == "" || governorConfig.CspSecretName == "" {
-			log.Error("Either ClusterID or URL or CSPSecretName is empty")
-			return errors.New("Either ClusterID or URL or CSPSecretName is empty")
-		}
-
-		log.Info("Calling governor exporter")
-		if exporterErr := exportReportToGovernor(ctx, report, policy); exporterErr != nil {
-			log.Errorf("Error from exporter: %v", exporterErr)
-			return exporterErr
-		}
+	err2 := c.checkAndSendReportToGovernor(ctx, policy, report)
+	if err2 != nil {
+		return err2
 	}
 
 	// Create report CR if necessary.
@@ -370,6 +363,25 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 		}
 	}
 
+	return nil
+}
+
+func (c *controller) checkAndSendReportToGovernor(ctx context.Context, policy *v1alpha1.InspectionPolicy, report *v1alpha1.AssessmentReport) error {
+	// Read config from InspectionPolicy, send assessment reports to Governor api if governor enabled.
+	if policy.Spec.Inspection.Assessment.Governor.Enabled {
+		governorConfig := policy.Spec.Inspection.Assessment.Governor
+
+		if governorConfig.ClusterID == "" || governorConfig.URL == "" || governorConfig.CspSecretName == "" {
+			log.Error("Either ClusterID or URL or CSPSecretName is empty")
+			return errors.New("Either ClusterID or URL or CSPSecretName is empty")
+		}
+
+		log.Info("Calling governor exporter")
+		if exporterErr := exportReportToGovernor(ctx, report, policy); exporterErr != nil {
+			log.Errorf("Error from exporter: %v", exporterErr)
+			return exporterErr
+		}
+	}
 	return nil
 }
 

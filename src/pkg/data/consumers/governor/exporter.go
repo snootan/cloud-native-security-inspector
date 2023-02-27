@@ -20,7 +20,7 @@ type GovernorExporter struct {
 // SendReportToGovernor is used to send report to governor url http end point.
 func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 	// Get governor api request model from assessment report.
-	kubernetesCluster := getGovernorAPIPayload(*g.Report)
+	kubernetesCluster := g.getGovernorAPIPayload()
 
 	log.Info("Payload data for governor:")
 	log.Info(kubernetesCluster)
@@ -58,17 +58,17 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 }
 
 // getGovernorAPIPayload is used to map assessment report to client model.
-func getGovernorAPIPayload(doc api.AssessmentReport) openapi.KubernetesTelemetryRequest {
+func (g GovernorExporter) getGovernorAPIPayload() openapi.KubernetesTelemetryRequest {
 	kubernetesCluster := openapi.NewKubernetesTelemetryRequestWithDefaults()
-	for _, nsa := range doc.Spec.NamespaceAssessments {
+	kubernetesCluster.Workloads = make([]openapi.KubernetesWorkload, 0)
+	for _, nsa := range g.Report.Spec.NamespaceAssessments {
 		for _, workloadAssessment := range nsa.WorkloadAssessments {
 			kubernetesWorkloads := openapi.NewKubernetesWorkloadWithDefaults()
 			kubernetesWorkloads.Name = workloadAssessment.Workload.Name
 			kubernetesWorkloads.Kind = workloadAssessment.Workload.Kind
-			if nsa.Namespace.Name != "" {
-				kubernetesWorkloads.Namespace = nsa.Namespace.Name
-			}
+			kubernetesWorkloads.Namespace = nsa.Namespace.Name
 			kubernetesWorkloads.Replicas = workloadAssessment.Workload.Replicas
+
 			for _, pod := range workloadAssessment.Workload.Pods {
 				containerData := openapi.NewContainerWithDefaults()
 				for _, container := range pod.Containers {

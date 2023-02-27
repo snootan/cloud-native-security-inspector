@@ -338,7 +338,8 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 	}
 
 	err2 := c.checkAndSendReportToGovernor(ctx, policy, report)
-	if err2 != nil {
+	log.Info("Calling governor exporter")
+		if err2 != nil {
 		return err2
 	}
 

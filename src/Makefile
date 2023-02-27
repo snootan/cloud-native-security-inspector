@@ -6,7 +6,7 @@ KUBECTLCMD=$(shell which kubectl)
 SWAGGER := $(DOCKERCMD) run --rm -it -v $(HOME):$(HOME) -w $(shell pwd) quay.io/goswagger/swagger
 
 REGISTRY ?= projects.registry.vmware.com/cnsi
-IMG_TAG = 0.2
+IMG_TAG = 0.3
 # Image URL to use all building/pushing image targets
 IMG_MANAGER ?= $(REGISTRY)/manager:$(IMG_TAG)
 IMG_CMD_INSPECTOR ?= $(REGISTRY)/inspector:$(IMG_TAG)
@@ -65,7 +65,7 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: manifests generate fmt vet ## Run tests.
+test: fmt vet ## Run tests.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
@@ -89,20 +89,20 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 docker-build-all: docker-build-manager docker-build-inspector docker-build-kubebench docker-build-portal docker-build-risk
 
-docker-build-manager: test build-manager ## Build docker image with the manager.
-	$(DOCKERCMD) build -t ${IMG_MANAGER} .
+docker-build-manager: build-manager ## Build docker image with the manager.
+	$(DOCKERCMD) buildx build -t ${IMG_MANAGER} .
 
 docker-build-inspector: build-inspector ## Build docker image with inspector cmd.
-	$(DOCKERCMD) build -t ${IMG_CMD_INSPECTOR} -f Dockerfile.inspection .
+	$(DOCKERCMD) buildx build -t ${IMG_CMD_INSPECTOR} -f Dockerfile.inspection .
 
 docker-build-kubebench: build-kubebench ## Build docker image with kubebench cmd.
-	$(DOCKERCMD) build -t ${IMG_CMD_KUBEBENCH} -f Dockerfile.kubebench .
+	$(DOCKERCMD) buildx build -t ${IMG_CMD_KUBEBENCH} -f Dockerfile.kubebench .
 
 docker-build-portal:
-	$(DOCKERCMD) build -t ${PORTAl} -f Dockerfile.portal .
+	$(DOCKERCMD) buildx build -t ${PORTAl} -f Dockerfile.portal .
 
 docker-build-risk: build-risk ## Build docker image with risk cmd.
-	$(DOCKERCMD) build -t ${RISK} -f Dockerfile.riskmanager .
+	$(DOCKERCMD) buildx build -t ${RISK} -f Dockerfile.riskmanager .
 
 docker-push: ## Push docker images with the manager.
 	$(DOCKERCMD) push ${IMG_MANAGER}

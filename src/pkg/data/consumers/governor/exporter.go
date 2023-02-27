@@ -26,7 +26,7 @@ func (g GovernorExporter) SendReportToGovernor(ctx context.Context) error {
 	log.Info(kubernetesCluster)
 	provider, ok := ctx.Value("cspProvider").(cspauth.Provider)
 	if !ok {
-		log.Error(" CSP Provider not found!")
+		return errors.New("CSP Provider not found!")
 	}
 
 	governorAccessToken, err := provider.GetBearerToken(ctx)

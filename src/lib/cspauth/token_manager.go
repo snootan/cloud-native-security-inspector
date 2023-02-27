@@ -33,7 +33,8 @@ type CSPClient interface {
 
 // CSPHttpClient is the client to perform talks to CSP.
 type CSPHttpClient struct {
-	host *url.URL
+	client *http.Client
+	host   *url.URL
 }
 
 // CSPAuthorizeResponse represents a response from CSP with information
@@ -53,7 +54,8 @@ func NewCspHTTPClient() (*CSPHttpClient, error) {
 
 	parsedURL, err := url.Parse(cspUrl)
 	return &CSPHttpClient{
-		host: parsedURL,
+		client: http.DefaultClient,
+		host:   parsedURL,
 	}, err
 }
 
@@ -71,7 +73,7 @@ func (c *CSPHttpClient) GetCspAuthorization(ctx context.Context, apiToken string
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("accept-encoding", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

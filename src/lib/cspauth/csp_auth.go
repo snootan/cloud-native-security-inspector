@@ -8,7 +8,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"math"
-	"sigs.k8s.io/controller-runtime"
 	"time"
 )
 
@@ -21,17 +20,18 @@ const (
 type Provider interface {
 	// GetBearerToken retrieves a short-lived access token to use in a single HTTP request
 	GetBearerToken(context.Context) (string, error)
+	NewCSPAuth(kubernetes.Interface, context.Context, string, string) (Provider, error)
 }
 
-type cspAuth struct {
-	apiToken  string
-	cspClient CSPClient
+type CspAuth struct {
+	CspClient CSPClient
 
+	apiToken     string
 	currentToken string
 	expiration   time.Time
 }
 
-func (a *cspAuth) GetBearerToken(ctx context.Context) (string, error) {
+func (a *CspAuth) GetBearerToken(ctx context.Context) (string, error) {
 	if a.currentToken == "" || time.Now().After(a.expiration) {
 		if err := a.refreshToken(ctx); err != nil {
 			return "", err
@@ -40,52 +40,44 @@ func (a *cspAuth) GetBearerToken(ctx context.Context) (string, error) {
 	return a.currentToken, nil
 }
 
-func (a *cspAuth) refreshToken(ctx context.Context) error {
+func (a *CspAuth) refreshToken(ctx context.Context) error {
 	return retry.NewRetry(
 		retry.WithName("auth token refresh"),
 		retry.WithMaxAttempts(3),
 		retry.WithIncrementDelay(5*time.Second, 5*time.Second),
 	).Run(ctx, func() (bool, error) {
 		now := time.Now()
-		cspAuthResponse, err := a.cspClient.GetCspAuthorization(ctx, a.apiToken)
+		cspAuthResponse, err := a.CspClient.GetCspAuthorization(ctx, a.apiToken)
 		if err != nil {
-			fmt.Printf("We got an error back from CSP %s", err)
+			log.Error(err, "We got an error back from CSP")
 			return false, nil
 		}
 
 		a.currentToken = cspAuthResponse.AccessToken
 		expiresIn := time.Duration(math.Min(float64(cspAuthResponse.ExpiresIn), tokenMaxAgeSeconds)) * time.Second
 		a.expiration = now.Add(expiresIn)
-		fmt.Printf("Obtained CSP access token, next refresh in %s\n", expiresIn)
+		log.Infof("Obtained CSP access token, next refresh in %s\n", expiresIn)
 		return true, nil
 	})
 }
 
-func NewCSPAuth(ctx context.Context, cspSecretNamespace string, cspSecretName string) (Provider, error) {
-	apiToken, err := getCSPTokenFromSecret(ctx, cspSecretNamespace, cspSecretName)
+func (a *CspAuth) NewCSPAuth(clientSet kubernetes.Interface, ctx context.Context, cspSecretNamespace string, cspSecretName string) (Provider, error) {
+
+	apiToken, err := getCSPTokenFromSecret(clientSet, ctx, cspSecretNamespace, cspSecretName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch CSP api-token: %w", err)
+		return nil, fmt.Errorf("Failed to fetch CSP api-token: %w", err)
 	}
-	cspClient, err := NewCspHTTPClient()
-	if err != nil {
-		return nil, fmt.Errorf("initializing CSP : %w", err)
+	a.apiToken = apiToken
+
+	if err := a.refreshToken(ctx); err != nil {
+		return nil, fmt.Errorf("Validating API token validity: %w", err)
 	}
 
-	provider := &cspAuth{apiToken: apiToken, cspClient: cspClient}
-	if err := provider.refreshToken(ctx); err != nil {
-		return nil, fmt.Errorf("validating API token validity: %w", err)
-	}
-
-	return provider, nil
+	return a, nil
 }
 
-func getCSPTokenFromSecret(ctx context.Context, ns string, secretName string) (string, error) {
-	config, err := kubernetes.NewForConfig(controllerruntime.GetConfigOrDie())
-	if err != nil {
-		log.Error(err, "Failed to get config while fetching secret!")
-		return "", err
-	}
-	secret, err := config.CoreV1().Secrets(ns).Get(ctx, secretName, v1.GetOptions{})
+func getCSPTokenFromSecret(clientSet kubernetes.Interface, ctx context.Context, ns string, secretName string) (string, error) {
+	secret, err := clientSet.CoreV1().Secrets(ns).Get(ctx, secretName, v1.GetOptions{})
 	if err != nil {
 		log.Error(err, "Failed to fetch secret")
 		return "", err

@@ -1,9 +1,9 @@
 package consumers
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"context"
 	api "github.com/vmware-tanzu/cloud-native-security-inspector/src/api/v1alpha1"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/cspauth"
 	openapi "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor/go-client"
@@ -13,14 +13,13 @@ import (
 )
 
 var (
-	mockClient   *openapi.APIClient
 	clusterID       = "testingId"
 	apiToken        = "apiToken"
-	namespace    = "testingNamespace"
-	name         = "name"
-	image        = "image"
-	imageID      = "imageId"
-	replicaCount = 2
+	namespace       = "testingNamespace"
+	name            = "name"
+	image           = "image"
+	imageID         = "imageId"
+	replicaCount    = 2
 	testHeader      = "testHeader"
 	testHeaderValue = "testHeaderValue"
 )
@@ -129,7 +128,10 @@ func TestSendReportToGovernor(t *testing.T) {
 				StatusCode: tt.testStatusCode,
 			}, nil)
 
-			errFromSendReportToGovernor := g.SendReportToGovernor(context.Background())
+			provider := cspauth.NewMockProvider()
+			provider.Token = "test-api-token"
+			ctx := context.WithValue(context.Background(), "cspProvider", provider)
+			errFromSendReportToGovernor := g.SendReportToGovernor(ctx)
 			if tt.testStatusCode != http.StatusNoContent {
 				assert.Error(t, errFromSendReportToGovernor)
 			} else {
@@ -140,10 +142,6 @@ func TestSendReportToGovernor(t *testing.T) {
 }
 
 func TestSendReportToGovernorNoProvider_Negative(t *testing.T) {
-	actualApi := mockClient.ClustersApi
-	mockApi := NewMockClustersApi()
-	mockClient.ClustersApi = mockApi
-
 	g := GovernorExporter{
 		Report: &api.AssessmentReport{
 			Spec: api.AssessmentReportSpec{NamespaceAssessments: []*api.NamespaceAssessment{{Namespace: v1.LocalObjectReference{
@@ -156,7 +154,6 @@ func TestSendReportToGovernorNoProvider_Negative(t *testing.T) {
 						ImageID: imageID,
 					}}}}}}}}}}},
 		ClusterID: clusterID,
-		ApiClient: mockClient,
 	}
 	errFromSendReportToGovernor := g.SendReportToGovernor(context.Background())
 	if errFromSendReportToGovernor == nil {
@@ -165,13 +162,9 @@ func TestSendReportToGovernorNoProvider_Negative(t *testing.T) {
 	if errFromSendReportToGovernor.Error() != "CSP Provider not found!" {
 		t.Fatalf("Call to SendReportToGovernor should have failed with error CSP Provider not found!")
 	}
-	mockClient.ClustersApi = actualApi
 }
 
 func TestSendReportToGovernorNoAccessToken_Negative(t *testing.T) {
-	actualApi := mockClient.ClustersApi
-	mockApi := NewMockClustersApi()
-	mockClient.ClustersApi = mockApi
 
 	g := GovernorExporter{
 		Report: &api.AssessmentReport{
@@ -185,7 +178,6 @@ func TestSendReportToGovernorNoAccessToken_Negative(t *testing.T) {
 						ImageID: imageID,
 					}}}}}}}}}}},
 		ClusterID: clusterID,
-		ApiClient: mockClient,
 	}
 	provider := cspauth.NewMockProvider()
 	provider.Token = ""
@@ -198,7 +190,4 @@ func TestSendReportToGovernorNoAccessToken_Negative(t *testing.T) {
 	if errFromSendReportToGovernor.Error() != "No token available!" {
 		t.Fatalf("SendReportToGovernor should have failed with No token available! %v", errFromSendReportToGovernor)
 	}
-
-	mockClient.ClustersApi = actualApi
-
 }

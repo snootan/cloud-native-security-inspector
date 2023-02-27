@@ -3,6 +3,7 @@ package cspauth
 import (
 	"context"
 	"errors"
+	"k8s.io/client-go/kubernetes"
 )
 
 // MockProvider is a mock of the Provider interface
@@ -20,4 +21,10 @@ func (m *MockProvider) GetBearerToken(ctx context.Context) (string, error) {
 		return "", errors.New("No token available!")
 	}
 	return m.Token, nil
+}
+
+func (m *MockProvider) NewCSPAuth(kubernetes.Interface, context.Context, string, string) (Provider, error) {
+	cspClient := &MockCSPClient{}
+	provider := &CspAuth{CspClient: cspClient}
+	return provider, nil
 }

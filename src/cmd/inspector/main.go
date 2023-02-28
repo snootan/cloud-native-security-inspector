@@ -34,6 +34,7 @@ func main() {
 	var policy string
 
 	flag.StringVar(&policy, "policy", "", "name of the inspection policy")
+
 	flag.Parse()
 	log.Infof("policy name %s", policy)
 	log.Info("inspector scanning")

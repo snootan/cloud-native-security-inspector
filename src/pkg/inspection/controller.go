@@ -5,6 +5,7 @@ package inspection
 import (
 	"context"
 	"fmt"
+	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/cspauth"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
 	es "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/es"
 	governor "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/governor"
@@ -12,6 +13,7 @@ import (
 	osearch "github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/data/consumers/opensearch"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	"time"
 
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/policy/enforcement"
@@ -339,7 +341,7 @@ func (c *controller) Run(ctx context.Context, policy *v1alpha1.InspectionPolicy)
 
 	err2 := c.checkAndSendReportToGovernor(ctx, policy, report)
 	log.Info("Calling governor exporter")
-		if err2 != nil {
+	if err2 != nil {
 		return err2
 	}
 
@@ -396,10 +398,25 @@ func exportReportToGovernor(ctx context.Context, report *v1alpha1.AssessmentRepo
 	}}
 	apiClient := openapi.NewAPIClient(config)
 
+	cspClient, err := cspauth.NewCspHTTPClient()
+	if err != nil {
+		log.Errorf("Initializing CSP : %v", err)
+		return err
+	}
+	provider := &cspauth.CspAuth{CspClient: cspClient}
+
+	clientSet, err := kubernetes.NewForConfig(ctrl.GetConfigOrDie())
+	if err != nil {
+		log.Error(err, "Failed to get kubernetes clientSet, check if kube config is correctly configured!")
+		return err
+	}
+
 	exporter := governor.GovernorExporter{
-		Report:    report,
-		ClusterID: governorConfig.ClusterID,
-		ApiClient: apiClient,
+		Report:        report,
+		ClusterID:     governorConfig.ClusterID,
+		ApiClient:     apiClient,
+		CspProvider:   provider,
+		KubeInterface: clientSet,
 	}
 
 	if apiResponseErr := exporter.SendReportToGovernor(ctx); apiResponseErr != nil {

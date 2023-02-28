@@ -6,12 +6,10 @@ import (
 	"context"
 	"flag"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/api/v1alpha1"
-	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/cspauth"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/lib/log"
 	"github.com/vmware-tanzu/cloud-native-security-inspector/src/pkg/inspection"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -21,10 +19,6 @@ import (
 var (
 	scheme  = runtime.NewScheme()
 	rootCtx = context.Background()
-)
-
-const (
-	cspSecretNamespace = "cnsi-system"
 )
 
 func init() {
@@ -64,25 +58,7 @@ func main() {
 	}
 
 	if inspectionPolicy.Spec.Inspection.Assessment.Governor.Enabled {
-		clientSet, err := kubernetes.NewForConfig(ctrl.GetConfigOrDie())
-		if err != nil {
-			log.Error(err, "Failed to get kubernetes clientSet, check if kube config is correctly configured!")
-			os.Exit(1)
-		}
-
-		cspClient, err := cspauth.NewCspHTTPClient()
-		if err != nil {
-			log.Errorf("Initializing CSP : %v", err)
-			os.Exit(1)
-		}
-
-		provider := &cspauth.CspAuth{CspClient: cspClient}
-		cspProvider, err := provider.NewCSPAuth(clientSet, ctx, cspSecretNamespace, inspectionPolicy.Spec.Inspection.Assessment.Governor.CspSecretName)
-		if err != nil {
-			log.Error("unable to establish connection with CSP, this is mandatory for connecting Governor back end!: %w", err)
-			os.Exit(1)
-		}
-		ctx = context.WithValue(ctx, "cspProvider", cspProvider)
+		ctx = context.WithValue(ctx, "cspSecretName", inspectionPolicy.Spec.Inspection.Assessment.Governor.CspSecretName)
 	}
 
 	runner := inspection.NewController().

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/goharbor/harbor/src/lib/log"
 	"io"
 	"net/http"
 	"net/url"
@@ -85,7 +85,7 @@ func (c *CSPHttpClient) GetCspAuthorization(ctx context.Context, apiToken string
 	}(resp.Body)
 
 	if err := c.checkCspAuthStatusCode(resp); err != nil {
-		fmt.Printf("Found an error code")
+		log.Error("Found an error code: %v", err.Error())
 		return nil, err
 	}
 

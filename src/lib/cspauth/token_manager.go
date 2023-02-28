@@ -85,7 +85,7 @@ func (c *CSPHttpClient) GetCspAuthorization(ctx context.Context, apiToken string
 	}(resp.Body)
 
 	if err := c.checkCspAuthStatusCode(resp); err != nil {
-		log.Error("Found an error code: %v", err.Error())
+		log.Errorf("Found an error code: %v", err.Error())
 		return nil, err
 	}
 

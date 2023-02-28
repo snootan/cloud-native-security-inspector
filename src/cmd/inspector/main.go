@@ -72,7 +72,7 @@ func main() {
 
 		cspClient, err := cspauth.NewCspHTTPClient()
 		if err != nil {
-			log.Errorf("Initializing CSP : %w", err)
+			log.Errorf("Initializing CSP : %v", err)
 			os.Exit(1)
 		}
 

@@ -15,7 +15,7 @@ import (
 const (
 	tokenMaxAgeSeconds     = 1700
 	apiToken               = "API_TOKEN"
-	cspConfigMapName       = "csp-config"
+	accessTokenSecretName  = "governor-accesstoken"
 	governorTokenExpiresIn = "governorAccessTokenExpiresIn"
 	governorAccessTokenKey = "governorAccessToken"
 	Retry                  = 3
@@ -36,13 +36,13 @@ type CspAuth struct {
 }
 
 func (a *CspAuth) GetBearerToken(clientSet kubernetes.Interface, ctx context.Context, cspSecretNamespace string, cspSecretName string) (string, error) {
-	configMap, err := getOrCreateCSPConfigMap(clientSet, ctx, cspSecretNamespace)
+	accessSecret, err := getOrCreateSecretForAccessToken(clientSet, ctx, cspSecretNamespace)
 	if err != nil {
 		return "", err
 	}
 
-	accessToken := configMap.Data[governorAccessTokenKey]
-	expiresIn, _ := configMap.Data[governorTokenExpiresIn]
+	accessToken := string(accessSecret.Data[governorAccessTokenKey])
+	expiresIn := string(accessSecret.Data[governorTokenExpiresIn])
 	accessTokenExpiresIn, _ := time.Parse(time.Layout, expiresIn)
 
 	if accessToken == "" || time.Now().After(accessTokenExpiresIn) {
@@ -51,14 +51,14 @@ func (a *CspAuth) GetBearerToken(clientSet kubernetes.Interface, ctx context.Con
 			return "", fmt.Errorf("Failed to fetch CSP api-token: %w", err)
 		}
 		a.apiToken = apiToken
-		if err := a.refreshToken(ctx, clientSet, cspSecretNamespace, configMap); err != nil {
+		if err := a.refreshToken(ctx, clientSet, cspSecretNamespace, accessSecret); err != nil {
 			return "", err
 		}
 	}
-	return configMap.Data[governorAccessTokenKey], nil
+	return string(accessSecret.Data[governorAccessTokenKey]), nil
 }
 
-func (a *CspAuth) refreshToken(ctx context.Context, clientSet kubernetes.Interface, cspSecretNamespace string, configMap *v12.ConfigMap) error {
+func (a *CspAuth) refreshToken(ctx context.Context, clientSet kubernetes.Interface, cspSecretNamespace string, accessTokenSecret *v12.Secret) error {
 	return retry.NewRetry(
 		retry.WithName("auth token refresh"),
 		retry.WithMaxAttempts(Retry),
@@ -75,11 +75,11 @@ func (a *CspAuth) refreshToken(ctx context.Context, clientSet kubernetes.Interfa
 		formattedExpiration := now.Add(expiresIn).Format(time.Layout)
 
 		log.Infof("Refreshed access token for governor: %s which expires in %s", cspAuthResponse.AccessToken, formattedExpiration)
-		configMap.Data[governorAccessTokenKey] = cspAuthResponse.AccessToken
-		configMap.Data[governorTokenExpiresIn] = formattedExpiration
-		_, err = clientSet.CoreV1().ConfigMaps(cspSecretNamespace).Update(ctx, configMap, v1.UpdateOptions{})
+		accessTokenSecret.Data[governorAccessTokenKey] = []byte(cspAuthResponse.AccessToken)
+		accessTokenSecret.Data[governorTokenExpiresIn] = []byte(formattedExpiration)
+		_, err = clientSet.CoreV1().Secrets(cspSecretNamespace).Update(ctx, accessTokenSecret, v1.UpdateOptions{})
 		if err != nil {
-			log.Error(err, "We got an error updating config map")
+			log.Error(err, "We got an error updating access token secret")
 			return false, nil
 		}
 		log.Infof("Obtained CSP access token, next refresh in %s\n", expiresIn)
@@ -97,23 +97,19 @@ func getCSPTokenFromSecret(clientSet kubernetes.Interface, ctx context.Context, 
 	return cspApiToken, err
 }
 
-func getOrCreateCSPConfigMap(clientSet kubernetes.Interface, ctx context.Context, ns string) (*v12.ConfigMap, error) {
-	configMap, err := clientSet.CoreV1().ConfigMaps(ns).Get(ctx, cspConfigMapName, v1.GetOptions{})
+func getOrCreateSecretForAccessToken(clientSet kubernetes.Interface, ctx context.Context, ns string) (*v12.Secret, error) {
+	secret, err := clientSet.CoreV1().Secrets(ns).Get(ctx, accessTokenSecretName, v1.GetOptions{})
 	if err != nil {
-		log.Warning(err, "Failed to fetch configMap, Now Trying to create new.")
-		config := &v12.ConfigMap{}
-		config.Name = cspConfigMapName
-		config.Namespace = ns
-		configMap, err = clientSet.CoreV1().ConfigMaps(ns).Create(ctx, config, v1.CreateOptions{})
+		log.Warning(err, "Failed to fetch secret for access token, Now Trying to create new secret for same")
+		secret = &v12.Secret{}
+		secret.Name = accessTokenSecretName
+		secret.Namespace = ns
+		secret.Data = map[string][]byte{}
+		secret, err = clientSet.CoreV1().Secrets(ns).Create(ctx, secret, v1.CreateOptions{})
 		if err != nil {
-			log.Error(err, "Failed to create configMap.")
-			return configMap, err
+			log.Error(err, "Failed to create secret for storing access token.")
+			return nil, err
 		}
 	}
-
-	if configMap.Data == nil {
-		configMap.Data = map[string]string{}
-	}
-	return configMap, nil
-
+	return secret, err
 }

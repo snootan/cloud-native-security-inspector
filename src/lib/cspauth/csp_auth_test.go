@@ -26,39 +26,39 @@ func TestNewCSPAuthSuccessCase(t *testing.T) {
 	errorSecret.Namespace = "csp-namespace"
 	errorSecret.Data = map[string][]byte{ApiToken: []byte(SendError)}
 
-	config := &v12.ConfigMap{}
-	config.Name = "csp-config"
-	config.Namespace = "csp-namespace"
-	config.Data = map[string]string{GovernorAccessTokenKey: "test-access-token"}
+	accessSecret := &v12.Secret{}
+	accessSecret.Name = "governor-accesstoken"
+	accessSecret.Namespace = "csp-namespace"
+	accessSecret.Data = map[string][]byte{GovernorAccessTokenKey: []byte("test-access-token")}
 
 	tt := []struct {
 		name         string
 		secretObject *v12.Secret
-		configObject *v12.ConfigMap
+		accessSecret *v12.Secret
 		wantErr      bool
 	}{
 		{
 			name:         "Get CSP Auth should Pass",
 			secretObject: secret,
-			configObject: config,
+			accessSecret: accessSecret,
 			wantErr:      false,
 		},
 		{
 			name:         "Get CSP Auth should fail because no secret found for csp api-token",
 			secretObject: nil,
-			configObject: config,
+			accessSecret: accessSecret,
 			wantErr:      true,
 		},
 		{
 			name:         "Get CSP Auth should fail with giving up refresh retry(3times)",
 			secretObject: errorSecret,
-			configObject: config,
+			accessSecret: accessSecret,
 			wantErr:      true,
 		},
 		{
-			name:         "Get CSP Auth should pass with config not found",
+			name:         "Get CSP Auth should pass with accessSecret not found",
 			secretObject: secret,
-			configObject: nil,
+			accessSecret: nil,
 			wantErr:      false,
 		},
 	}
@@ -74,8 +74,8 @@ func TestNewCSPAuthSuccessCase(t *testing.T) {
 			if tc.secretObject != nil {
 				objects = append(objects, tc.secretObject)
 			}
-			if tc.configObject != nil {
-				objects = append(objects, tc.configObject)
+			if tc.accessSecret != nil {
+				objects = append(objects, tc.accessSecret)
 			}
 			clientSet := fake.NewSimpleClientset(objects...)
 
@@ -101,11 +101,7 @@ func TestGetBearerTokenSuccess(t *testing.T) {
 	secret.Namespace = "csp-namespace"
 	secret.Data = map[string][]byte{ApiToken: []byte("test-api-token")}
 
-	config := &v12.ConfigMap{}
-	config.Name = "csp-config"
-	config.Namespace = "csp-namespace"
-	config.Data = map[string]string{GovernorAccessTokenKey: "test-access-token"}
-	clientSet := fake.NewSimpleClientset(secret, config)
+	clientSet := fake.NewSimpleClientset(secret)
 
 	tokenManager := NewMockCSPClient()
 	provider := &CspAuth{CspClient: tokenManager}
@@ -122,11 +118,7 @@ func TestGetBearerTokenReturnSameTokenSuccess(t *testing.T) {
 	secret.Namespace = "csp-namespace"
 	secret.Data = map[string][]byte{ApiToken: []byte("test-api-token")}
 
-	config := &v12.ConfigMap{}
-	config.Name = "csp-config"
-	config.Namespace = "csp-namespace"
-	config.Data = map[string]string{GovernorAccessTokenKey: "test-access-token"}
-	clientSet := fake.NewSimpleClientset(secret, config)
+	clientSet := fake.NewSimpleClientset(secret)
 
 	tokenManager := NewMockCSPClient()
 	provider := &CspAuth{CspClient: tokenManager}

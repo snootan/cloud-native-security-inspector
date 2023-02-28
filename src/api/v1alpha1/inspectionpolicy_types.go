@@ -130,7 +130,7 @@ type Governor struct {
 	// Api url to send telemetry data
 	// +kubebuilder:validation:Optional
 	URL string `json:"url"`
-	// Secret name where CSP api token is stored
+	// Secret name where CSP api token is stored in cnsi-system namespace
 	// +kubebuilder:validation:Optional
 	CspSecretName string `json:"cspSecretName"`
 }
